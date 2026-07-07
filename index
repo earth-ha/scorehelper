@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>결시생 인정점 산출·서류 안내·회의록 생성 도구</title>
+<style>
+  body {
+    font-family: "Malgun Gothic", Arial, sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+    color: #222;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 18px 48px;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 20px;
+    margin: 0 0 16px;
+  }
+  .subtitle {
+    color: #555;
+    margin-bottom: 22px;
+    line-height: 1.5;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+  }
+  label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 7px;
+  }
+  input, select, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    padding: 10px 11px;
+    font-size: 15px;
+    font-family: inherit;
+    background: #fff;
+  }
+  input:disabled {
+    background: #eee;
+    color: #777;
+  }
+  textarea {
+    min-height: 300px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  .full {
+    grid-column: 1 / -1;
+  }
+  .hint {
+    font-size: 13px;
+    color: #666;
+    margin-top: 5px;
+    line-height: 1.45;
+  }
+  .buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  button {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .primary {
+    background: #111;
+    color: white;
+  }
+  .secondary {
+    background: #e8e8e8;
+    color: #111;
+  }
+  .danger {
+    background: #f1dede;
+    color: #8a1111;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    vertical-align: top;
+  }
+  th {
+    background: #f0f0f0;
+    text-align: center;
+    white-space: nowrap;
+  }
+  td input, td select {
+    min-width: 110px;
+    font-size: 14px;
+    padding: 8px;
+  }
+  .subjectName {
+    min-width: 130px;
+  }
+  .memoInput {
+    min-width: 180px;
+  }
+  .resultCell {
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .messageCell {
+    min-width: 210px;
+    color: #444;
+    line-height: 1.45;
+  }
+  .tableWrap {
+    overflow-x: auto;
+  }
+  .warning {
+    background: #fff8e6;
+    border: 1px solid #f0d58a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    line-height: 1.55;
+    margin-top: 14px;
+  }
+  .note {
+    background: #eef4ff;
+    border: 1px solid #b9cdf0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    line-height: 1.55;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  .small {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.55;
+  }
+  .pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #eee;
+    font-size: 12px;
+    color: #444;
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>결시생 인정점 산출·서류 안내·회의록 생성 도구</h1>
+  <div class="subtitle">
+    학번·이름, 결시 사유, 기준점수 적용 근거, 과목별 점수를 입력하면 필요 서류, 인정점, 회의록용 근거 문구를 자동 생성합니다.<br>
+    ※ 산출 기준은 대전글꽃중학교 학업성적관리규정 제17조(인정점 부여)·제18조를 따르며, 최종 확정은 학업성적관리위원회 심의 결과를 따릅니다.
+  </div>
+
+  <div class="card">
+    <h2>1. 학생 및 결시 정보</h2>
+    <div class="grid">
+      <div>
+        <label for="studentNo">학번</label>
+        <input id="studentNo" placeholder="예: 30115">
+      </div>
+      <div>
+        <label for="studentName">이름</label>
+        <input id="studentName" placeholder="예: 홍길동">
+      </div>
+      <div>
+        <label for="examName">결시 고사</label>
+        <input id="examName" placeholder="예: 2학기 기말고사">
+      </div>
+      <div>
+        <label for="reason">결시 사유 유형</label>
+        <select id="reason" onchange="updateReasonState()">
+          <option value="100">100% 인정점(공결 등) (규정 제17조③)</option>
+          <option value="80">80% 인정점(질병결 등) (규정 제17조④)</option>
+          <option value="min_under">최하점 미만(-1점 부여)(미인정결 등) (규정 제17조⑤)</option>
+          <option value="zero">0점(부정행위) (규정 제17조⑥)</option>
+          <option value="committee">위원회 심의 대상 (규정 제17조⑦)</option>
+        </select>
+      </div>
+      <div id="committeeRatioBox" style="display:none;">
+        <label for="committeeRatio">위원회 결정 인정비율(%)</label>
+        <input id="committeeRatio" type="number" step="1" min="0" max="100" placeholder="예: 80" oninput="updateDocumentGuide()">
+        <div class="hint">규정 제17조⑦은 비율·방법을 학업성적관리위원회에서 정합니다. 위원회에서 의결한 비율을 입력하세요.</div>
+      </div>
+      <div class="full">
+        <label for="reasonDetail">구체적 결시 사유</label>
+        <select id="reasonDetail">
+          <option value="">선택하세요</option>
+        </select>
+        <input id="reasonDetailOther" style="display:none; margin-top:8px;" placeholder="기타 사유 직접 입력">
+        <div id="documentGuide" class="warning" style="margin-top:10px;">
+          결시 사유를 선택하면 필요한 증빙서류가 여기에 표시됩니다.
+        </div>
+      </div>
+      <div>
+        <label for="priority">기준점수 적용 우선순위</label>
+        <select id="priority" onchange="updatePriorityMemoOptions()">
+          <option value="1">1순위: 동일 학기 동일 과목의 다른 정기고사 점수</option>
+          <option value="2">2순위: 이전 학기 동일 과목의 동일 유형 고사 점수</option>
+          <option value="3">3순위: 해당 고사에서 응시한 나머지 과목 평균</option>
+          <option value="4">4순위: 동일 학기 전 과목 평균</option>
+          <option value="5">5순위: 해당 과목 동일 학년 전체 학생 성적 평균</option>
+        </select>
+        <div id="priorityNote" class="note" style="display:none;"></div>
+      </div>
+      <div>
+        <label for="priorityMemo">기준점수 적용 근거</label>
+        <select id="priorityMemo" onchange="togglePriorityOther()"></select>
+        <input id="priorityMemoOther" style="display:none; margin-top:8px;" placeholder="기준점수 적용 근거 직접 입력">
+      </div>
+      <div>
+        <label for="perfectScore">만점</label>
+        <input id="perfectScore" type="number" step="0.01" value="100">
+      </div>
+      <div>
+        <label for="capScore">만점 초과 시 처리</label>
+        <select id="capScore">
+          <option value="raw">계산값 그대로 표시 (규정 기본)</option>
+          <option value="cap">만점으로 제한 (위원회 별도 의결 시)</option>
+        </select>
+        <div class="hint">규정에는 만점 상한 조항이 없습니다. 결시고사 평균이 응시고사 평균보다 높으면 만점을 초과할 수 있으며, 상한 적용은 위원회 판단 사항입니다.</div>
+      </div>
+    </div>
+    <div class="warning">
+      사유 유형에 따라 과목별 입력칸이 자동으로 바뀝니다.
+      <b>100%·80%·위원회 심의</b>는 기준점수/평균 입력이 필요하고, <b>최하점 미만(-1점 부여)</b>는 최하점만 필요하며, <b>0점</b>은 점수 입력 없이 처리됩니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. 과목별 점수 입력 <span class="pill">여러 과목 가능</span></h2>
+    <div class="tableWrap">
+      <table id="scoreTable">
+        <thead>
+          <tr>
+            <th>과목</th>
+            <th>기준점수</th>
+            <th>기준고사 평균</th>
+            <th>결시고사 평균</th>
+            <th>최하점<br><span style="font-weight:400;font-size:12px;">(부정행위 0점 제외)</span></th>
+            <th>최종 인정점</th>
+            <th>검토 메시지</th>
+            <th>삭제</th>
+          </tr>
+        </thead>
+        <tbody id="scoreBody"></tbody>
+      </table>
+    </div>
+    <div class="buttons">
+      <button class="secondary" onclick="addRow()">과목 추가</button>
+      <button class="primary" onclick="calculateAll()">전체 계산 및 회의록 생성</button>
+      <button class="secondary" onclick="resetAll()">초기화</button>
+    </div>
+    <div class="note">
+      인정점은 규정 예시와 동일하게 <b>소수 둘째 자리</b>까지 산출합니다. 최종 원점수는 규정 제18조②에 따라 정기시험·수행평가 환산점수를 합산한 뒤 소수 첫째 자리에서 반올림하여 정수로 확정하므로, 여기 값은 합산 전 인정점입니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. 회의록용 근거 문구</h2>
+    <textarea id="minutes" readonly>계산 후 자동 생성됩니다.</textarea>
+    <div class="buttons">
+      <button class="primary" onclick="copyMinutes()">회의록 문구 복사</button>
+      <button class="secondary" onclick="copySummary()">요약 복사</button>
+      <button class="secondary" onclick="downloadTxt()">TXT 저장</button>
+    </div>
+    <p class="small">
+      ※ 회의록 반영 전 확인 권장: 결시 증빙자료, 학업성적관리규정 조항, 인정비율, 기준점수 적용 우선순위, 소수점 처리 기준, 만점 초과 처리 기준, 위원회 심의 필요 여부.
+    </p>
+  </div>
+</div>
+
+<script>
+const reasonOptions = {
+  "100": [
+    "천재지변",
+    "법정 감염병 등 등교중지",
+    "공적 의무(병역·징병신체검사·증인출두 등)",
+    "학교장 허가 대회·훈련 참가",
+    "교환학습",
+    "학교폭력 피해로 인한 결시",
+    "가정폭력 피해로 인한 임시보호 결시",
+    "경조사로 인한 결시",
+    "공직선거법에 따른 의정활동(수업일수 10% 이내)",
+    "기타 부득이한 사유로 학교장 허가",
+    "기타 직접 입력"
+  ],
+  "80": [
+    "질병으로 인한 결시",
+    "부모·가족 봉양, 가사 조력, 간병 등 개인 사정",
+    "생리통으로 인한 결시(월 1일 이내)",
+    "학교장 허가 교외체험학습",
+    "의정활동(수업일수 10% 초과)",
+    "선거운동 또는 정당활동 결시",
+    "기타 직접 입력"
+  ],
+  "min_under": [
+    "학교폭력 가해학생 출석정지",
+    "교권침해 관련 출석정지",
+    "징계에 따른 출석정지 또는 가정학습",
+    "범법행위 등 책임 있는 사유",
+    "태만, 가출, 출석 거부 등 미인정 결시",
+    "기타 합당하지 않은 사유",
+    "기타 직접 입력"
+  ],
+  "zero": [
+    "고사 중 부정행위",
+    "부정행위 방조 또는 조력",
+    "기타 직접 입력"
+  ],
+  "committee": [
+    "학교폭력 가해학생 봉사·사회봉사·특별교육·심리치료(학교장 인정)",
+    "초·중등교육법 시행령상 봉사·사회봉사·특별교육 이수",
+    "숙려제(상담·진로 프로그램) 참여",
+    "경찰관서 선도프로그램 참여",
+    "교권 관련 사회봉사·특별교육·심리치료",
+    "공직선거법·지방교육자치법에 따른 투표 참여",
+    "소년보호기관 성적 미산출로 재적교 평가 결시",
+    "그 밖에 지침에 명시되지 않은 결시 사유",
+    "기타 직접 입력"
+  ]
+};
+
+const priorityMemos = {
+  "1": [
+    "동일 학기 내 동일 과목의 다른 정기고사에 응시하여 해당 점수를 기준점수로 적용함.",
+    "결시 고사와 동일 학기 내 비교 가능한 동일 과목 정기고사 점수가 확인되어 이를 기준점수로 적용함.",
+    "기타 직접 입력"
+  ],
+  "2": [
+    "동일 학기 내 기준점수가 없어 이전 학기 동일 과목의 동일 유형 고사 점수를 기준점수로 적용함.",
+    "중간고사 결시에 대해 이전 학기 중간고사 점수를 기준점수로 적용함.",
+    "기말고사 결시에 대해 이전 학기 기말고사 점수를 기준점수로 적용함.",
+    "기타 직접 입력"
+  ],
+  "3": [
+    "이전 학기 동일 과목 점수가 없어 해당 고사에서 학생이 실제 응시한 나머지 과목 평균을 기준점수로 적용함.",
+    "해당 고사 일부 과목에 응시한 사실이 확인되어 응시 과목 평균을 기준점수로 적용함.",
+    "기타 직접 입력"
+  ],
+  "4": [
+    "이전 학기 동일 과목 점수 및 해당 고사 응시 과목 평균 산출이 어려워 동일 학기 전 과목 평균을 기준점수로 적용함.",
+    "동일 학기 성적 자료를 기준으로 전 과목 평균을 산출하여 기준점수로 적용함.",
+    "기타 직접 입력"
+  ],
+  "5": [
+    "학생 개인 기준점수를 산출할 자료가 없어 해당 과목 동일 학년 전체 학생 성적 평균을 기준점수로 적용함.",
+    "전 과목 결시 등으로 개인 기준점수 산출이 불가하여 동일 학년 과목 평균을 기준점수로 적용함.",
+    "기타 직접 입력"
+  ]
+};
+
+const priorityNotes = {
+  "3": "3순위(나머지 응시 과목 평균)부터는 개별 과목의 '기준고사 평균/결시고사 평균' 비율 개념이 명확하지 않습니다. 학교 관행에 따라 ① 위 비율식을 그대로 적용하거나 ② 기준점수 × 인정비율만 적용할 수 있으므로, 입력값 기준을 위원회에서 확인하세요.",
+  "4": "4순위(동일 학기 전 과목 평균)는 개별 과목 평균 비율이 성립하지 않을 수 있습니다. 기준고사 평균·결시고사 평균 입력 기준을 위원회에서 정한 방식에 맞춰 입력하세요.",
+  "5": "5순위(동일 학년 전체 평균)는 개인 기준점수 산출이 불가한 경우입니다. 평균 비율 적용 여부와 입력값 기준을 위원회 심의로 확정하는 것을 권장합니다."
+};
+
+const documentRequirements = {
+  "천재지변": "담임 또는 학교 확인 자료, 재난·교통 통제 등 객관적 확인 자료가 있으면 첨부",
+  "법정 감염병 등 등교중지": "진단서, 의사소견서, 진료확인서, 검사결과 통보서, 보건당국·학교 등교중지 확인 자료 등",
+  "공적 의무(병역·징병신체검사·증인출두 등)": "소집 통지서, 출석 확인서, 관련 기관 공문 등",
+  "학교장 허가 대회·훈련 참가": "학교장 허가 내부결재, 대회·훈련 참가 공문, 참가 확인 자료 등",
+  "교환학습": "교환학습 승인서, 출석 확인 자료, 관련 내부결재 등",
+  "학교폭력 피해로 인한 결시": "학교폭력 전담기구 사실 확인 자료, 피해학생 보호조치 관련 자료, 출결 처리 근거 자료 등 (학교폭력예방법 제14조③·제16조①)",
+  "가정폭력 피해로 인한 임시보호 결시": "가정폭력 관련 상담소·보호시설 임시보호 확인 자료, 관련 기관 확인서, 학교 내부 확인 자료 등",
+  "경조사로 인한 결시": "가족관계 확인 자료, 청첩장, 사망진단서 또는 장례 확인 자료 등 (경조사 일수 규정: 결혼-형제자매/부/모 1일, 사망-부모/조부모 5일 등)",
+  "공직선거법에 따른 의정활동(수업일수 10% 이내)": "의정활동 확인서(본회의·상임위 회의 당일 참석), 관련 기관 공문, 활동 일자 확인 자료 등",
+  "기타 부득이한 사유로 학교장 허가": "사유서, 보호자 의견서, 학교장 허가 내부결재, 기타 객관적 증빙자료",
+
+  "질병으로 인한 결시": "결시일부터 5일 이내 제출한 결석 신고서 + 의사 진단서(소견서)·진료확인서 등. 상습적이지 않은 2일 이내 결석은 학부모 의견서·처방전·담임 확인서 등으로 갈음 가능",
+  "부모·가족 봉양, 가사 조력, 간병 등 개인 사정": "보호자 의견서, 담임 확인서, 관련 사유서, 필요 시 객관적 증빙자료 (학교장 인정 필요)",
+  "생리통으로 인한 결시(월 1일 이내)": "학부모 의견서 또는 담임 확인 자료 등 (월 1일 한도 확인)",
+  "학교장 허가 교외체험학습": "교외체험학습 신청서, 승인서, 결과보고서 등",
+  "의정활동(수업일수 10% 초과)": "의정활동 확인서, 관련 기관 확인 자료, 수업일수 10% 초과 여부 확인 자료 등",
+  "선거운동 또는 정당활동 결시": "후보등록 확인 자료 또는 정당 발기인·당원 활동 확인 자료, 법령상 허용 여부 확인 자료 등",
+
+  "학교폭력 가해학생 출석정지": "학교폭력 조치 결정(제17조①제6호) 관련 자료, 출석정지 처분 확인 자료 등",
+  "교권침해 관련 출석정지": "교권보호위원회 조치(교원지위법 제25조②제4호) 관련 자료, 출석정지 처분 확인 자료 등",
+  "징계에 따른 출석정지 또는 가정학습": "초·중등교육법 시행령 제31조 징계 결정 자료, 출석정지 또는 가정학습 처분 확인 자료 등",
+  "범법행위 등 책임 있는 사유": "수사기관 출석·체포·구속·수감 등 관련 확인 자료, 학교 확인 자료 등",
+  "태만, 가출, 출석 거부 등 미인정 결시": "담임 상담 기록, 보호자 연락 기록, 출결 확인 자료, 미인정 결시 판단 근거 자료 등",
+  "기타 합당하지 않은 사유": "담임 확인 자료, 보호자 연락 기록, 학업성적관리위원회 판단 근거 자료 등",
+
+  "고사 중 부정행위": "부정행위 적발 경위서, 감독교사 확인서, 학생 확인서 또는 진술서, 관련 증빙자료, 학업성적관리위원회 심의 자료 등",
+  "부정행위 방조 또는 조력": "감독교사 확인서, 관련 학생 진술서, 부정행위 방조·조력 판단 근거 자료, 학업성적관리위원회 심의 자료 등",
+
+  "학교폭력 가해학생 봉사·사회봉사·특별교육·심리치료(학교장 인정)": "학교폭력 조치 결정(제17조①제3·4·5호) 자료, 학교장 인정 근거, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "초·중등교육법 시행령상 봉사·사회봉사·특별교육 이수": "시행령 제31조 제1항 조치 결정 자료, 이수 확인 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "숙려제(상담·진로 프로그램) 참여": "초·중등교육법 제28조⑦ 숙려제 참여 확인 자료, 프로그램 이수 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "경찰관서 선도프로그램 참여": "시도경찰청 소년업무규칙에 따른 선도프로그램 참여 확인 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "교권 관련 사회봉사·특별교육·심리치료": "교원지위법 제25조②제2·3호, 제25조③·④ 조치 관련 자료, 이수 확인 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "공직선거법·지방교육자치법에 따른 투표 참여": "투표 참여 확인 자료, 관련 법령 근거 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "소년보호기관 성적 미산출로 재적교 평가 결시": "소년보호기관 성적 미산출 확인 자료, 재적교 평가 결시 경위 자료, 위원회 심의 자료. 인정비율은 위원회 의결로 확정",
+  "그 밖에 지침에 명시되지 않은 결시 사유": "결시 사유를 확인할 수 있는 객관적 자료, 학업성적관리위원회 심의·의결 자료. 인정비율·방법은 위원회에서 결정",
+
+  "기타 직접 입력": "사유를 직접 입력한 경우, 해당 사유를 객관적으로 확인할 수 있는 자료와 학교장 승인 또는 위원회 심의 근거를 첨부"
+};
+
+function round1(x) {
+  return Math.round((x + Number.EPSILON) * 10) / 10;
+}
+function round2(x) {
+  return Math.round((x + Number.EPSILON) * 100) / 100;
+}
+
+function reasonInfo() {
+  const r = document.getElementById("reason").value;
+  if (r === "100") return {ratio: 1, label: "100% 인정점", type: "공식 산출"};
+  if (r === "80") return {ratio: 0.8, label: "80% 인정점", type: "공식 산출"};
+  if (r === "min_under") return {ratio: null, label: "최하점 미만(-1점 부여)", type: "최하점 미만(-1점 부여)"};
+  if (r === "zero") return {ratio: 0, label: "0점", type: "0점 부여"};
+  if (r === "committee") {
+    const rv = document.getElementById("committeeRatio").value;
+    const rr = rv === "" ? NaN : Number(rv);
+    return {
+      ratio: isNaN(rr) ? null : rr / 100,
+      label: isNaN(rr) ? "위원회 결정(비율 미입력)" : `위원회 결정(${rr}%)`,
+      type: "위원회 심의"
+    };
+  }
+}
+
+function updateReasonState() {
+  const reason = document.getElementById("reason").value;
+  const detail = document.getElementById("reasonDetail");
+  detail.innerHTML = `<option value="">선택하세요</option>`;
+  reasonOptions[reason].forEach(x => {
+    const opt = document.createElement("option");
+    opt.value = x;
+    opt.textContent = x;
+    detail.appendChild(opt);
+  });
+  document.getElementById("reasonDetailOther").style.display = "none";
+  document.getElementById("committeeRatioBox").style.display =
+    reason === "committee" ? "block" : "none";
+  detail.onchange = () => {
+    document.getElementById("reasonDetailOther").style.display =
+      detail.value === "기타 직접 입력" ? "block" : "none";
+    updateDocumentGuide();
+  };
+  updateDocumentGuide();
+  updateInputState();
+}
+
+function updatePriorityMemoOptions() {
+  const p = document.getElementById("priority").value;
+  const memo = document.getElementById("priorityMemo");
+  memo.innerHTML = "";
+  priorityMemos[p].forEach(x => {
+    const opt = document.createElement("option");
+    opt.value = x;
+    opt.textContent = x;
+    memo.appendChild(opt);
+  });
+  togglePriorityOther();
+
+  const noteBox = document.getElementById("priorityNote");
+  if (priorityNotes[p]) {
+    noteBox.style.display = "block";
+    noteBox.textContent = priorityNotes[p];
+  } else {
+    noteBox.style.display = "none";
+    noteBox.textContent = "";
+  }
+}
+
+function togglePriorityOther() {
+  const memo = document.getElementById("priorityMemo").value;
+  document.getElementById("priorityMemoOther").style.display =
+    memo === "기타 직접 입력" ? "block" : "none";
+}
+
+function addRow(data = {}) {
+  const body = document.getElementById("scoreBody");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input class="subjectName" placeholder="예: 과학" value="${data.subject || ""}"></td>
+    <td><input class="baseScore scoreInput" type="number" step="0.01" placeholder="예: 90" value="${data.baseScore || ""}"></td>
+    <td><input class="baseAvg scoreInput" type="number" step="0.01" placeholder="예: 75" value="${data.baseAvg || ""}"></td>
+    <td><input class="absentAvg scoreInput" type="number" step="0.01" placeholder="예: 70" value="${data.absentAvg || ""}"></td>
+    <td><input class="minScore scoreInput" type="number" step="0.01" placeholder="예: 8" value="${data.minScore || ""}"></td>
+    <td class="resultCell">-</td>
+    <td class="messageCell">-</td>
+    <td style="text-align:center;"><button class="danger" onclick="removeRow(this)">삭제</button></td>
+  `;
+  body.appendChild(tr);
+  updateInputState();
+}
+
+function removeRow(btn) {
+  btn.closest("tr").remove();
+}
+
+function updateInputState() {
+  const info = reasonInfo();
+  document.querySelectorAll("#scoreBody tr").forEach(tr => {
+    const baseScore = tr.querySelector(".baseScore");
+    const baseAvg = tr.querySelector(".baseAvg");
+    const absentAvg = tr.querySelector(".absentAvg");
+    const minScore = tr.querySelector(".minScore");
+
+    [baseScore, baseAvg, absentAvg, minScore].forEach(x => x.disabled = false);
+
+    if (info.type === "공식 산출" || info.type === "위원회 심의") {
+      minScore.disabled = true;
+      minScore.value = "";
+    } else if (info.type === "최하점 미만(-1점 부여)") {
+      baseScore.disabled = true; baseScore.value = "";
+      baseAvg.disabled = true; baseAvg.value = "";
+      absentAvg.disabled = true; absentAvg.value = "";
+    } else if (info.type === "0점 부여") {
+      baseScore.disabled = true; baseScore.value = "";
+      baseAvg.disabled = true; baseAvg.value = "";
+      absentAvg.disabled = true; absentAvg.value = "";
+      minScore.disabled = true; minScore.value = "";
+    }
+  });
+}
+
+function val(input) {
+  const v = input.value;
+  if (v === "" || v === null) return NaN;
+  return Number(v);
+}
+
+function getReasonDetail() {
+  const select = document.getElementById("reasonDetail");
+  if (select.value === "기타 직접 입력") {
+    return document.getElementById("reasonDetailOther").value || "기타 사유";
+  }
+  return select.value || "구체적 결시 사유 미입력";
+}
+
+function getRequiredDocuments() {
+  const select = document.getElementById("reasonDetail");
+  if (!select.value) return "결시 사유 선택 후 증빙서류 확인 필요";
+  return documentRequirements[select.value] || "해당 사유를 확인할 수 있는 객관적 증빙자료 및 학교 규정상 필요한 서류";
+}
+
+function updateDocumentGuide() {
+  const guide = document.getElementById("documentGuide");
+  if (!guide) return;
+  const detail = getReasonDetail();
+  const docs = getRequiredDocuments();
+  const reason = document.getElementById("reason").value;
+  let extra = "";
+  if (reason === "committee") {
+    extra = `<br>- 인정비율: 규정 제17조⑦에 따라 학업성적관리위원회 의결로 확정`;
+  }
+  guide.innerHTML = `<b>필요 서류 안내</b><br>- 결시 사유: ${detail}<br>- 필요 서류: ${docs}${extra}<br><span class="small">※ 학교 규정에 따라 제출 기한과 인정 가능 서류가 다를 수 있으므로 최종 확인이 필요합니다.</span>`;
+}
+
+function getPriorityMemo() {
+  const select = document.getElementById("priorityMemo");
+  if (select.value === "기타 직접 입력") {
+    return document.getElementById("priorityMemoOther").value || "기준점수 적용 근거 직접 입력 필요";
+  }
+  return select.value;
+}
+
+function priorityText() {
+  const s = document.getElementById("priority");
+  return s.options[s.selectedIndex].text;
+}
+
+function calculateRow(tr) {
+  const info = reasonInfo();
+  const subject = tr.querySelector(".subjectName").value || "과목명 미입력";
+  const resultCell = tr.querySelector(".resultCell");
+  const messageCell = tr.querySelector(".messageCell");
+  const perfectScore = Number(document.getElementById("perfectScore").value || 100);
+  const capMode = document.getElementById("capScore").value;
+
+  let result = null;
+  let raw = null;
+  let message = "";
+  let formula = "";
+
+  if (info.type === "0점 부여") {
+    raw = 0;
+    result = 0;
+    message = "부정행위 사유로 공식 적용 없이 0점 처리 (규정 제17조⑥)";
+    formula = "0점 부여";
+  } else if (info.type === "최하점 미만(-1점 부여)") {
+    const minScore = val(tr.querySelector(".minScore"));
+    if (isNaN(minScore)) {
+      resultCell.textContent = "입력 필요";
+      messageCell.textContent = "최하점을 입력하세요. (부정행위로 0점 처리된 점수는 최하점에서 제외)";
+      return null;
+    }
+    raw = minScore - 1;
+    result = Math.max(0, round2(raw));
+    message = "최하점 미만(-1점 부여) 사유로 최하점보다 1점 낮은 점수 부여 (규정 제17조⑤). 부정행위 0점은 최하점 산정에서 제외했는지 확인 필요";
+    formula = `최하점(${minScore}점) - 1 = ${result}점`;
+  } else {
+    // 공식 산출(100%/80%) 및 위원회 심의(수동 비율)
+    if (info.type === "위원회 심의" && info.ratio === null) {
+      resultCell.textContent = "비율 필요";
+      messageCell.textContent = "위원회 결정 인정비율(%)을 입력하세요.";
+      return null;
+    }
+    const baseScore = val(tr.querySelector(".baseScore"));
+    const baseAvg = val(tr.querySelector(".baseAvg"));
+    const absentAvg = val(tr.querySelector(".absentAvg"));
+    if ([baseScore, baseAvg, absentAvg].some(x => isNaN(x))) {
+      resultCell.textContent = "입력 필요";
+      messageCell.textContent = "기준점수, 기준고사 평균, 결시고사 평균을 입력하세요.";
+      return null;
+    }
+    if (baseAvg === 0) {
+      resultCell.textContent = "오류";
+      messageCell.textContent = "기준고사 평균이 0이면 계산할 수 없습니다.";
+      return null;
+    }
+    raw = baseScore * (absentAvg / baseAvg) * info.ratio;
+    let rounded = round2(raw);
+    result = rounded;
+
+    if (capMode === "cap" && result > perfectScore) {
+      result = perfectScore;
+      message = `계산값 ${rounded}점이 만점 초과 → 만점으로 제한(위원회 의결 기준)`;
+    } else {
+      if (result > perfectScore) message = `계산값이 만점 초과(${rounded}점). 규정상 상한 없음 — 위원회 확인 권장`;
+      else if (absentAvg > baseAvg) message = "결시고사 평균이 높아 기준점수보다 높게 환산됨";
+      else if (absentAvg < baseAvg) message = "결시고사 평균이 낮아 기준점수보다 낮게 환산됨";
+      else message = "평균이 같아 인정비율 중심으로 환산됨";
+    }
+    formula = `${baseScore} × (${absentAvg} / ${baseAvg}) × ${info.ratio} = ${rounded}점`;
+  }
+
+  resultCell.textContent = `${result}점`;
+  messageCell.textContent = message;
+
+  return {subject, result, raw: round2(raw), message, formula};
+}
+
+function calculateAll() {
+  const rows = [...document.querySelectorAll("#scoreBody tr")];
+  if (rows.length === 0) {
+    alert("과목을 1개 이상 추가해 주세요.");
+    return;
+  }
+
+  const calculated = rows.map(calculateRow).filter(Boolean);
+  if (calculated.length === 0) {
+    alert("계산 가능한 과목이 없습니다. 입력값을 확인해 주세요.");
+    return;
+  }
+
+  const studentNo = document.getElementById("studentNo").value || "학번 미입력";
+  const studentName = document.getElementById("studentName").value || "이름 미입력";
+  const examName = document.getElementById("examName").value || "결시 고사 미입력";
+  const info = reasonInfo();
+  const detail = getReasonDetail();
+  const pText = priorityText();
+  const pMemo = getPriorityMemo();
+  const requiredDocs = getRequiredDocuments();
+  const reason = document.getElementById("reason").value;
+
+  const subjectLines = calculated.map((x, i) =>
+`${i + 1}) ${x.subject}
+   - 산출 과정: ${x.formula}
+   - 최종 인정점(합산 전, 소수 둘째 자리): ${x.result}점
+   - 검토 사항: ${x.message}`
+  ).join("\n");
+
+  const committeeLine = reason === "committee"
+    ? "\n- 비고: 본 사유는 규정 제17조⑦에 해당하여 인정비율·방법을 학업성적관리위원회에서 심의·의결함."
+    : "";
+
+  const minutes =
+`[결시생 인정점 산출 근거 회의록 초안]
+
+1. 대상 학생
+- 학번: ${studentNo}
+- 성명: ${studentName}
+- 결시 고사: ${examName}
+
+2. 결시 사유, 인정비율 및 증빙서류
+- 결시 사유: ${detail}
+- 적용 유형: ${info.label}
+- 인정비율: ${info.ratio === null ? "해당 없음(위원회 결정 필요)" : Math.round(info.ratio * 100) + "%"}
+- 처리 방식: ${info.type}
+- 필요 서류: ${requiredDocs}${committeeLine}
+
+3. 기준점수 적용 기준
+- 적용 우선순위: ${pText}
+- 적용 근거: ${pMemo}
+
+4. 과목별 인정점 산출 내역
+${subjectLines}
+
+5. 심의·검토 의견
+- 위 학생의 결시 사유와 관련 증빙자료 제출·확인 여부를 검토하고, 학교 학업성적관리규정 제17조의 결시생 인정점 부여 기준에 따라 인정비율을 적용하였다.
+- 기준점수는 규정 제17조⑧에서 정한 우선순위에 따라 적용하였으며, 과목별 결시고사 평균과 기준고사 평균의 차이를 반영하여 인정점을 산출하였다.
+- 인정점은 규정 예시에 준하여 소수 둘째 자리까지 산출하였으며, 최종 원점수는 규정 제18조②에 따라 정기시험·수행평가 환산점수를 합산한 뒤 소수 첫째 자리에서 반올림하여 정수로 확정한다.
+- 산출 결과는 고사 간 평균 차이에 따른 환산 결과이므로 기준점수보다 높거나 낮게 산출될 수 있으며, 만점 초과 시 상한 적용 여부는 위원회에서 확인한다.
+- 최종 인정점은 학업성적관리위원회 심의 및 학교 규정 확인 후 확정한다.`;
+
+  document.getElementById("minutes").value = minutes;
+}
+
+function copyMinutes() {
+  const text = document.getElementById("minutes").value;
+  navigator.clipboard.writeText(text).then(() => alert("회의록 문구를 복사했습니다."));
+}
+
+function copySummary() {
+  const text = document.getElementById("minutes").value;
+  const summary = text
+    .split("\n")
+    .filter(line => line.includes("학번:") || line.includes("성명:") || line.includes("결시 고사:") || line.includes("적용 유형:") || line.includes("최종 인정점"))
+    .join("\n");
+  navigator.clipboard.writeText(summary).then(() => alert("요약을 복사했습니다."));
+}
+
+function getSafeFileName(text) {
+  return String(text || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "_")
+    .replace(/\s+/g, "_") || "미입력";
+}
+
+function makeTxtBackupContent() {
+  const studentNo = document.getElementById("studentNo").value || "학번 미입력";
+  const studentName = document.getElementById("studentName").value || "이름 미입력";
+  const examName = document.getElementById("examName").value || "결시 고사 미입력";
+  const reasonType = document.getElementById("reason").options[document.getElementById("reason").selectedIndex].text;
+  const reasonDetail = getReasonDetail();
+  const priority = priorityText();
+  const priorityMemo = getPriorityMemo();
+  const requiredDocs = getRequiredDocuments();
+  const minutes = document.getElementById("minutes").value || "회의록 미생성";
+
+  const rows = [...document.querySelectorAll("#scoreBody tr")];
+  const subjectLines = rows.map((tr, i) => {
+    const subject = tr.querySelector(".subjectName").value || "과목명 미입력";
+    const baseScore = tr.querySelector(".baseScore").value || "-";
+    const baseAvg = tr.querySelector(".baseAvg").value || "-";
+    const absentAvg = tr.querySelector(".absentAvg").value || "-";
+    const minScore = tr.querySelector(".minScore").value || "-";
+    const result = tr.querySelector(".resultCell").textContent || "-";
+    const message = tr.querySelector(".messageCell").textContent || "-";
+
+    return `${i + 1}. ${subject}
+   - 기준점수: ${baseScore}
+   - 기준고사 평균: ${baseAvg}
+   - 결시고사 평균: ${absentAvg}
+   - 최하점: ${minScore}
+   - 최종 인정점: ${result}
+   - 검토 메시지: ${message}`;
+  }).join("\n\n");
+
+  const savedAt = new Date().toLocaleString("ko-KR");
+
+  return `[결시생 인정점 산출 자료 백업]
+
+저장 일시: ${savedAt}
+
+1. 학생 및 결시 정보
+- 학번: ${studentNo}
+- 성명: ${studentName}
+- 결시 고사: ${examName}
+- 결시 사유 유형: ${reasonType}
+- 구체적 결시 사유: ${reasonDetail}
+- 필요 서류: ${requiredDocs}
+
+2. 기준점수 적용
+- 적용 우선순위: ${priority}
+- 적용 근거: ${priorityMemo}
+
+3. 과목별 입력 및 산출 결과
+${subjectLines || "과목별 입력 자료 없음"}
+
+------------------------------------------------------------
+
+[회의록용 근거 문구]
+
+${minutes}`;
+}
+
+function downloadTxt() {
+  const minutes = document.getElementById("minutes").value;
+  if (!minutes || minutes === "계산 후 자동 생성됩니다.") {
+    const proceed = confirm("회의록이 아직 생성되지 않았습니다. 현재 입력값만 기준으로 TXT 파일을 저장할까요?");
+    if (!proceed) return;
+  }
+
+  const studentNo = getSafeFileName(document.getElementById("studentNo").value);
+  const studentName = getSafeFileName(document.getElementById("studentName").value);
+  const examName = getSafeFileName(document.getElementById("examName").value);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const content = makeTxtBackupContent();
+  const blob = new Blob(["\uFEFF" + content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `결시생_인정점_산출자료_${studentNo}_${studentName}_${examName}_${today}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+function resetAll() {
+  document.getElementById("studentNo").value = "";
+  document.getElementById("studentName").value = "";
+  document.getElementById("examName").value = "";
+  document.getElementById("reason").value = "100";
+  document.getElementById("committeeRatio").value = "";
+  document.getElementById("priority").value = "1";
+  document.getElementById("perfectScore").value = 100;
+  document.getElementById("capScore").value = "raw";
+  document.getElementById("scoreBody").innerHTML = "";
+  document.getElementById("minutes").value = "계산 후 자동 생성됩니다.";
+  updateReasonState();
+  updatePriorityMemoOptions();
+  addRow();
+}
+
+updateReasonState();
+updatePriorityMemoOptions();
+addRow();
+
+document.getElementById("reasonDetailOther").addEventListener("input", updateDocumentGuide);
+</script>
+</body>
+</html>
